@@ -289,16 +289,16 @@ get_safety4<-function(safety3) {
   DRB<-as.data.frame(DRB)
   
   DT1$sumreads<-apply(DT1[3:10], 1, function(x) {sum(x*safety3$n_readsI)})
-  DQB$sumreads<-apply(DQB[3:10], 1, function(x) {sum(x*safety3$n_readsI)})
-  DRB$sumreads<-apply(DRB[3:10], 1, function(x) {sum(x*safety3$n_readsI)})
+  DQB$sumreads<-apply(DQB[3:10], 1, function(x) {sum(x*safety3$n_readsDQB)})
+  DRB$sumreads<-apply(DRB[3:10], 1, function(x) {sum(x*safety3$n_readsDRB)})
   
   DT1$meanreads<-apply(DT1[3:10], 1, function(x) {mean(x*safety3$n_readsI)})
-  DQB$meanreads<-apply(DQB[3:10], 1, function(x) {mean(x*safety3$n_readsI)})
-  DRB$meanreads<-apply(DRB[3:10], 1, function(x) {mean(x*safety3$n_readsI)})
+  DQB$meanreads<-apply(DQB[3:10], 1, function(x) {mean(x*safety3$n_readsDQB)})
+  DRB$meanreads<-apply(DRB[3:10], 1, function(x) {mean(x*safety3$n_readsDRB)})
   
   DT1$medianreads<-apply(DT1[3:10], 1, function(x) {median(x*safety3$n_readsI)})
-  DQB$medianreads<-apply(DQB[3:10], 1, function(x) {median(x*safety3$n_readsI)})
-  DRB$medianreads<-apply(DRB[3:10], 1, function(x) {median(x*safety3$n_readsI)})
+  DQB$medianreads<-apply(DQB[3:10], 1, function(x) {median(x*safety3$n_readsDQB)})
+  DRB$medianreads<-apply(DRB[3:10], 1, function(x) {median(x*safety3$n_readsDRB)})
   
   Ps<-rep(0.05, times=8)
   for (i in 3:10) {

@@ -83,7 +83,7 @@ merge_cons_complicated<-function(readed){
 get_groups<-function(readed,threshold=100,read_length=250,primer_length=20){
   readed$read1<-substr(readed$read1,primer_length,read_length)#trim them
   readed$read2<-substr(readed$read2,primer_length,read_length)#trim them
- # readed<-readed[duplicated(readed$read1),]
+  readed<-readed[duplicated(readed$read1),]
   readed<-split(readed,f = readed$read1) 
   #merge them
   if (length(readed)>0)
