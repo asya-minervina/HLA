@@ -27,6 +27,19 @@ File_list_pipeline_amplicones_parallel<-function(filelist,read_length=250,thresh
   res
 }
 
+File_list_pipeline_amplicones_parallel_win<-function(filelist,read_length=250,threshold=100,cores=4){
+  resHLA<-lapply(filelist[,1],"[",1)
+  names(resHLA)<-filelist[,1]
+  cl <- makeForkCluster(getOption("cl.cores", 2))
+  res<-parLapply(cl,1:nrow(filelist), mc.cores =cores, function(i){
+    cat(names(resHLA)[i])
+    HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold)
+  })
+  names(res)<-filelist[,1]
+  stopCluster(cl)
+  res
+}
+
 
 HLA_set<-DNAStringSet(HLA_base$Sequence)
 
