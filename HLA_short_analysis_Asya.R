@@ -340,7 +340,7 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250){
                IIamp1_Others=readed[grepl("CTGAGCTCCC[GC]ACTGG",substr(readed$read1,1,20)),],
                IIamp2=readed[grepl("GGAACAGCCAGAAGGA",substr(readed$read1,1,20)),],
                Iamp1alt=readed[grepl("TC[CT]CACTCCATGAGGTATTTC|TCCCACTCCATGAAGTATTTC",substr(readed$read1,1,22)),],
-               Iamp2alt=readed[grepl("GGCAA[AG]GATTACATCGCC|GGCAAGGATTACATCGCT",substr(readed$read1,1,22)),],
+               Iamp2alt=readed[grepl("GGCAA[AG]GATTACATCGCC|GGCAAGGATTACATCGCT",substr(readed$read1,1,20)),],
                IIamp1_DQBalt=readed[grepl("TGAGGGCAGAGAC[CT]CTCC",substr(readed$read1,1,22)),],
                IIamp1_DRBalt=readed[grepl("TGACAGTGACACTGATGG|TGACAGTGACATTGACGG",substr(readed$read1,1,22)),],
                IIamp2_DRBalt=readed[grepl("GAGAGCTTCAC[AG]GTGCAG",substr(readed$read1,1,22)),],#&grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read2,1,22))
@@ -351,7 +351,7 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250){
                IIamp1_Others_inv=readed[grepl("[CT]CAGCAGGTTGTGGTG|CCAG[GC]AGGTT[AG]TGGTG",substr(readed$read1,1,20))&grepl("CTGAGCTCCC[GC]ACTGG",substr(readed$read2,1,20)), ],#,],
                IIamp2_inv=readed[grepl("CCAC[GT]TGGCAGGTGTA|CCACTTGGCAAGTGTA",substr(readed$read1,1,20)),],
                Iamp1alt_inv=readed[grepl("GAGC[GC]ACTCCACGCAC|GAGCCCGTCCACGCAC",substr(readed$read1,1,22)),],
-               Iamp2alt_inv=readed[grepl("TCAGGGTGAGGGGCT|TCAGGGTGCAGGGCT",substr(readed$read1,1,22)),],
+               Iamp2alt_inv=readed[grepl("TCAGGGTGAGGGGCT|TCAGGGTGCAGGGCT",substr(readed$read1,1,20)),],
                IIamp1_DQBalt_inv=readed[grepl("GTCCAGTCACC[AG]TTCCTA",substr(readed$read1,1,22)),],
                IIamp1_DRBalt_inv=readed[grepl("CAG[CT]CTTCTCTTCCTGGC",substr(readed$read1,1,22)),],
                IIamp2_DRBalt_inv=readed[grepl("TGCTCTGTGCAGATTCAG",substr(readed$read1,1,22)),],#&grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read1,1,22)),],
@@ -382,8 +382,8 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250){
   readed$IIamp1_Others_inv<-get_overlap_merged_fix(readed$IIamp1_Others_inv, shift=130)
   readed$IIamp2<-get_overlap_merged_fix(readed$IIamp2, shift = 155)
   readed$IIamp2_inv<-get_overlap_merged_fix(readed$IIamp2_inv, shift = 155)
-  readed$Iamp2alt<-rbind(get_overlap_merged_fix(readed$Iamp2alt, shift=9), get_overlap_merged_fix(readed$Iamp2alt, shift=40))
-  readed$Iamp2alt_inv<-rbind(get_overlap_merged_fix(readed$Iamp2alt_inv, shift = 9), get_overlap_merged_fix(readed$Iamp2alt_inv, shift = 40))
+  readed$Iamp2alt<-get_overlap_merged_fix(readed$Iamp2alt, shift=40)
+  readed$Iamp2alt_inv<-get_overlap_merged_fix(readed$Iamp2alt_inv, shift = 40)
   readed$IIamp1_DQBalt<-get_overlap_merged_fix(readed$IIamp1_DQBalt, shift = 32)
   readed$IIamp1_DQBalt_inv<-get_overlap_merged_fix(readed$IIamp1_DQBalt_inv, shift = 32)
   readed$IIamp1_DRBalt<-get_overlap_merged_fix(readed$IIamp1_DRBalt, shift=35)
@@ -409,7 +409,6 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250){
   print(format(Sys.time(), "%a %b %d %X %Y"))
   npapas<-sapply(readed_intersect,nrow)
   intersect_reads<-sapply(readed_intersect, function(x) {sum(x$readnumber)})
-  intersect_reads[c("Iamp2alt", "Iamp2alt_inv" )]<-intersect_reads[c("Iamp2alt", "Iamp2alt_inv" )]/2
   print(npapas)
   used<-sapply(readed_intersect, function(x) {sum(x[x$Exact!="", ]$readnumber)})
   non_used<-(intersect_reads-used)
