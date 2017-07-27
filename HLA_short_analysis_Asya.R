@@ -6,6 +6,22 @@ library(data.table)
 library(dplyr)
 library(parallel)
 
+#Making a new base
+#Download from github
+get_HLA_base <- function(filename) {
+  base<-as.data.frame(readDNAStringSet(filename))
+  getbase<-str_split(rownames(base), pattern = fixed(" "), simplify=T)
+  base$Fasta_Id<-getbase[,1]
+  base$Allele<-getbase[,2]
+  base$length<-getbase[,3]
+  base$Sequence<-base$x
+  base$HLA_class<-str_split(base$Allele, pattern = fixed("*"), simplify=T)[,1]
+  HLA_base<-select(base,2:6)
+  HLA_base
+}
+HLA_base2<-get_HLA_base("hla_nuc.fasta.txt")
+
+
 File_list_pipeline_amplicones<-function(filelist,read_length=250,threshold=100){
   resHLA<-lapply(filelist[,1],"[",1)
   names(resHLA)<-filelist[,1]
