@@ -1,14 +1,14 @@
 #experimental aligner.
 #72 504
 #445 897
-sam561<-gzreader("HLA-MRD-July/561_S11_L001_R1_001.fastq.gz","HLA-MRD-July/561_S11_L001_R2_001.fastq.gz")
-sam561<-list(Iamp1=sam561[grepl("CCCTGACC[GC]AGACCTG",substr(sam561$read1,1,20)),],
-             Iamp2=sam561[grepl("CGACGGCAA[AG]GATTAC",substr(sam561$read1,1,20)),])
+sam1<-gzreader("../HLA_asya/HLA-MRD-July/1-1_S1_L001_R1_001.fastq.gz","../HLA_asya/HLA-MRD-July/1-1_S1_L001_R2_001.fastq.gz")
+sam1<-list(Iamp1=sam1[grepl("CCCTGACC[GC]AGACCTG",substr(sam1$read1,1,20)),],
+           Iamp2=sam1[grepl("CGACGGCAA[AG]GATTAC",substr(sam1$read1,1,20)),],)
 
-r1mat<-do.call(cbind,strsplit(substr(sam561$Iamp1$read1,20,250),""))
-basemat<-do.call(cbind,strsplit(substr(AlignHLAspf$A$Alignment,72,72+230),""))
-r2mat<-do.call(cbind,strsplit(substr(revcomp(sam561$Iamp1$read2,20,250)),""))
-basemat2<-do.call(cbind,strsplit(substr(AlignHLAspf$A$Alignment,274,504),""))
+r1mat<-do.call(cbind,strsplit(substr(sam1$Iamp1$read1,20,250),""))
+basemat<-do.call(cbind,strsplit(substr(AlignHLAspf$C$Alignment,72,72+230),""))
+r2mat<-do.call(cbind,strsplit(substr(revcomp(sam1$Iamp1$read2,20,250)),""))
+basemat2<-do.call(cbind,strsplit(substr(AlignHLAspf$C$Alignment,274,504),""))
 score1<-matrix(0,ncol = ncol(r1mat),nrow=ncol(basemat));
 #score1<-numeric(ncol(basemat))
 for (i in 1:3116)
