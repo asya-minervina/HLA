@@ -8,8 +8,6 @@ library(igraph)
 library(tibble)
 library(parallel)
 
-
-
 get_mega_table <- function(Typing_results) {
   Mega_table_first<-do.call(rbind, lapply(Typing_results, function(x){x$safety5}))
   Mega_table_first<-rownames_to_column(df = Mega_table_first)
@@ -43,7 +41,7 @@ get_safety3 <- function(safety2) {
   HLA_allele_DRB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="DRB*", fixed=F))%>%select(Allele, Sequence)
   HLA_allele_DQB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="DQB*", fixed=F))%>%select(Allele, Sequence)
   
-  N150<-paste0(rep(x = "N", times=30), collapse="")
+  N150<-paste0(rep(x = "N", times=150), collapse="")
   HLA_allele_Iclass$Sequence<-paste0(N150, HLA_allele_Iclass$Sequence, N150)
   HLA_allele_DRB$Sequence<-paste0(N150, HLA_allele_DRB$Sequence, N150)
   HLA_allele_DQB$Sequence<-paste0(N150, HLA_allele_DQB$Sequence, N150)
