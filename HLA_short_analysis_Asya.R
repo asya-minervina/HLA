@@ -1,10 +1,13 @@
 load("HLA_base.rda")
 library(igraph)
 library(stringdist)
+library(stringr)
 library(Biostrings)
 library(data.table)
 library(dplyr)
 library(parallel)
+library(foreach)
+
 
 #Making a new base
 #Download from github
@@ -19,7 +22,7 @@ get_HLA_base <- function(filename) {
   HLA_base<-select(base,2:6)
   HLA_base
 }
-HLA_base2<-get_HLA_base("hla_nuc.fasta.txt")
+HLA_base<-get_HLA_base("hla_nuc.fasta.txt")
 
 
 File_list_pipeline_amplicones<-function(filelist,read_length=250,threshold=100){
