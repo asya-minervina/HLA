@@ -46,7 +46,7 @@ File_list_pipeline_amplicones_parallel<-function(filelist,read_length=250,thresh
   res
 }
 
-File_list_pipeline_amplicones_parallel_win<-function(filelist,read_length=250,threshold=100,cores=4){
+File_list_pipeline_amplicones_parallel_win<-function(filelist,read_length=250,threshold=100){
   resHLA<-lapply(filelist[,1],"[",1)
   names(resHLA)<-filelist[,1]
   #cl <- makePSOCKcluster(cores)
