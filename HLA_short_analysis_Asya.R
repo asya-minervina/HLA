@@ -468,4 +468,3 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250){
 }  
 
 
-
