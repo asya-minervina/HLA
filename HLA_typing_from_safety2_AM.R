@@ -8,6 +8,8 @@ library(igraph)
 library(tibble)
 library(parallel)
 
+
+
 get_mega_table <- function(Typing_results) {
   Mega_table_first<-do.call(rbind, lapply(Typing_results, function(x){x$safety5}))
   Mega_table_first<-rownames_to_column(df = Mega_table_first)
@@ -36,15 +38,16 @@ get_HLA_result<-function (donor) {  say("START!")
 }
 
 get_safety3 <- function(safety2) {
+#HLAbase filter to mask new allele
+  #HLA_base<-HLA_base[!grepl(x = HLA_base$Allele, pattern="A*02:01", fixed = T), ]
   HLA_allele_list<-HLA_base
+  N150<-paste0(rep(x = "N", times=150), collapse="")
+  HLA_allele_list$Sequence<-paste0(N150, HLA_allele_list$Sequence, N150)
+  
   HLA_allele_Iclass<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(HLA_class=="A"|HLA_class=="B"|HLA_class=="C")%>%select(Allele, Sequence)
   HLA_allele_DRB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="DRB*", fixed=F))%>%select(Allele, Sequence)
   HLA_allele_DQB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="DQB*", fixed=F))%>%select(Allele, Sequence)
   
-  N150<-paste0(rep(x = "N", times=150), collapse="")
-  HLA_allele_Iclass$Sequence<-paste0(N150, HLA_allele_Iclass$Sequence, N150)
-  HLA_allele_DRB$Sequence<-paste0(N150, HLA_allele_DRB$Sequence, N150)
-  HLA_allele_DQB$Sequence<-paste0(N150, HLA_allele_DQB$Sequence, N150)
   
   HLA_allele_Iclass$Iamp1<-0
   HLA_allele_Iclass$Iamp1_inv<-0
@@ -126,13 +129,14 @@ get_safety3 <- function(safety2) {
       #                                                 fixed=F)],",", i)
       VC<-vcountPattern(pattern = what$assembled[i], subject = HLA1_dnastr,
                         max.mismatch = 0, with.indels = F, fixed=F)
+      what$Exact_new[i]<-paste0(HLA_allele_Iclass$Allele[VC!=0], collapse = " ")
       
       where[VC!=0]<-where[VC!=0]+what$freq[i]
 
       indices[VC!=0] <- paste0(indices[VC!=0],",", i)
       
     }
-    list(where,indices)
+    list(where,indices, what)
   }
   
   allele_freq_in_ampsDQB <- function(what,where, indices) {
@@ -154,11 +158,12 @@ get_safety3 <- function(safety2) {
       VC<-vcountPattern(pattern = what$assembled[i], subject = HLADQB_dnastr,
                         max.mismatch = 0, with.indels = F, fixed=F)
       
+      what$Exact_new[i]<-paste0(HLA_allele_DQB$Allele[VC!=0], collapse = " ")
       where[VC!=0]<-where[VC!=0]+what$freq[i]
       
       indices[VC!=0] <- paste0(indices[VC!=0],",", i)
     }
-    list(where,indices)
+    list(where,indices, what)
   }
   
   allele_freq_in_ampsDRB <- function(what,where, indices) {
@@ -179,12 +184,13 @@ get_safety3 <- function(safety2) {
       VC<-vcountPattern(pattern = what$assembled[i], subject = HLADRB_dnastr,
                         max.mismatch = 0, with.indels = F, fixed=F)
       
+      what$Exact_new[i]<-paste0(HLA_allele_DRB$Allele[VC!=0], collapse = " ")
       where[VC!=0]<-where[VC!=0]+what$freq[i]
       
       indices[VC!=0] <- paste0(indices[VC!=0],",", i)
       
       }
-    list(where,indices)
+    list(where,indices, what)
   }
   
   
@@ -201,6 +207,7 @@ get_safety3 <- function(safety2) {
       tempres<-allele_freq_in_ampsI(safety2[[colname]], HLA_allele_Iclass[[colname]], HLA_Iclass_amps[[colname]])
       HLA_allele_Iclass[[colname]]<-tempres[[1]]
       HLA_Iclass_amps[[colname]]<- tempres[[2]]
+      safety2[[colname]]<- tempres[[3]]
       n_readsI[colname]<-sum(safety2[[colname]]$readnumber)
       }
   }
@@ -210,6 +217,7 @@ get_safety3 <- function(safety2) {
       tempres<-allele_freq_in_ampsDQB(safety2[[colname]], HLA_allele_DQB[[colname]], HLA_DQB_amps[[colname]])
       HLA_allele_DQB[[colname]]<-tempres[[1]]
       HLA_DQB_amps[[colname]]<- tempres[[2]]
+      safety2[[colname]]<- tempres[[3]]
       n_readsDQB[colname]<-sum(safety2[[colname]]$readnumber)
     }
   }
@@ -219,14 +227,35 @@ get_safety3 <- function(safety2) {
       tempres<-allele_freq_in_ampsDRB(safety2[[colname]], HLA_allele_DRB[[colname]], HLA_DRB_amps[[colname]])
       HLA_allele_DRB[[colname]]<-tempres[[1]]
       HLA_DRB_amps[[colname]]<- tempres[[2]]
+      safety2[[colname]]<- tempres[[3]]
       n_readsDRB[colname]<-sum(safety2[[colname]]$readnumber)
     }
   }
   
+#Get merged inv and non inv lists to search for possible new allele variants  
+  safety2_merged<-list()
+  HLA_base_str<-DNAStringSet(HLA_allele_list$Sequence)
+  for (name in  names(safety2)[!grepl(pattern = "inv", x = names(safety2), fixed=T)]) {
+  name2<-paste0(name, "_inv", sep="")
+  safety2_merged[[name]]<-full_join(x = safety2[[name]], y= safety2[[name2]], by=c("assembled", "Exact_new"))
+  safety2_merged[[name]]<-safety2_merged[[name]]%>%select("assembled",  nreads="readnumber.x", nreads_inv="readnumber.y", "Exact_new")
+  safety2_merged[[name]]$nreads[is.na(safety2_merged[[name]]$nreads)]<-0
+  safety2_merged[[name]]$nreads_inv[is.na(safety2_merged[[name]]$nreads_inv)]<-0
+  
+#Match suspicious(inv+non_inv+noExact match) seqs on the whole base
+   for (i in which(safety2_merged[[name]]$nreads_inv!=0&safety2_merged[[name]]$nreads!=0&safety2_merged[[name]]$Exact_new=="", )) {
+  VC1<-vcountPattern(pattern = safety2_merged[[name]]$assembled[i], subject = HLA_base_str,
+                     max.mismatch = 0, with.indels = F, fixed=F)
+  safety2_merged[[name]]$Exact_new[i]<-paste0(HLA_allele_list$Allele[VC1!=0], collapse=" ")
+
+   }
+  }
+
   safety3<-list(HLA_allele_Iclass=HLA_allele_Iclass, HLA_Iclass_amps=HLA_Iclass_amps, 
                 HLA_allele_DQB=HLA_allele_DQB, HLA_DQB_amps=HLA_DQB_amps,
                 HLA_allele_DRB=HLA_allele_DRB, HLA_DRB_amps=HLA_DRB_amps,
-                n_readsI=n_readsI, n_readsDQB=n_readsDQB, n_readsDRB=n_readsDRB)
+                n_readsI=n_readsI, n_readsDQB=n_readsDQB, n_readsDRB=n_readsDRB, 
+                safety2_merged=safety2_merged)
   safety3
 }
 
@@ -313,17 +342,17 @@ get_safety4<-function(safety3) {
   DRB$Score<-apply(DRB[3:10], 1, prod)
 
   amps_list1<-str_split(DT1$amps, pattern = "_")
-  #str_split(amps_list1[[1]], pattern = ",")
+  
   for (i in 1:length(amps_list1)) {
     amps_list1[[i]]<-str_split(amps_list1[[i]], pattern = "," )
   }
   amps_listDQB<-str_split(DQB$amps, pattern = "_")
-  #str_split(amps_listDQB[[1]], pattern = ",")
+
   for (i in 1:length(amps_listDQB)) {
     amps_listDQB[[i]]<-str_split(amps_listDQB[[i]], pattern = "," )
   }
   amps_listDRB<-str_split(DRB$amps, pattern = "_")
-  #str_split(amps_listDRB[[1]], pattern = ",")
+
   for (i in 1:length(amps_listDRB)) {
     amps_listDRB[[i]]<-str_split(amps_listDRB[[i]], pattern = "," )
   }
@@ -384,12 +413,6 @@ HLA_typing_results[grepl(HLA_typing_results$Allele, pattern = "DRB[2-9]", fixed 
 HLA_typing_results<-select(HLA_typing_results, Allele, Score, no_amps, sumreads, meanreads, medianreads)
 }
 
-#TypingResults2<-lapply(amplicones_miseq_new_lists_all, get_HLA_result)
-
-# Mega_table_hlares<-do.call(rbind, lapply(TypingResults2, function(x){x$safety5}))
-# Mega_table_hlares<-rownames_to_column(df = Mega_table_hlares)
-# Mega_table_hlares$donor<-sapply(str_split(Mega_table_hlares$rowname, fixed(".")), function(x) {x[[1]]})
-# Mega_table_hlares<-select(Mega_table_hlares, donor, Allele, Score, no_amps, sumreads, meanreads, medianreads)
 
 signs3<-function(string) {
   paste(str_split(string, pattern = fixed(":"), simplify = T )[1:3], sep=":", collapse = ":") 
@@ -399,12 +422,5 @@ signs3<-function(string) {
 gettidyHLA<-function (longstr) {
   paste(unique(sapply(str_split(longstr, pattern=fixed(" "), simplify = T), signs3)), collapse = " ")
 }
-
-# Mega_table_hlares$tidyAllele<-sapply(Mega_table_hlares$Allele, gettidyHLA)
-# Mega_table_hlares$tidyAllele<-gsub(Mega_table_hlares$tidyAllele, pattern = ":NA", replacement = "", fixed = T)
-# Mega_table_hlares<-Mega_table_hlares[Mega_table_hlares$Score>1e-5, ]
-# Mega_table_hlares<-select(Mega_table_hlares, donor, tidyAllele, Allele, Score, no_amps, sumreads, meanreads, medianreads)
-# Luci<-get_HLA_result(amplicones_miseq_new_lists_all$Luci)
-# SL<-get_HLA_result(amplicones_miseq_new_lists_all$SL)
 
 
