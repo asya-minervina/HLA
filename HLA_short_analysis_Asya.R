@@ -361,10 +361,13 @@ bayesian_alleles_report<-function(allelelist){
   list(A=a,B=b,C=c,DRB=DRB,DQB=DQB)
 }
 
-HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250){
+HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsample=-1){
   print("File read start")
   print(format(Sys.time(), "%a %b %d %X %Y"))
   readed<-gzreader(read1,read2)
+  if (downsample!=-1) {
+    readed<-readed[sample(1:nrow(readed), size = downsample, replace=F),]
+  } 
   readed<-readed[nchar(readed$read1)>200&nchar(readed$read2)>200, ]
   nrow(readed)
   readed<-list(Iamp1=readed[grepl("CCCTGACC[GC]AGACCTG",substr(readed$read1,1,20)),],

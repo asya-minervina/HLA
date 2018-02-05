@@ -136,7 +136,9 @@ safety2<-DRB[[4]]
 #Get merged inv and non inv lists to search for possible new allele variants  
   safety2_merged<-list()
   HLA_base_str<-DNAStringSet(HLA_allele_list$Sequence)
-  for (name in  names(safety2)[!grepl(pattern = "inv", x = names(safety2), fixed=T)]) {
+  for (name in  names(safety2)[!grepl(pattern = "inv", x = names(safety2), fixed=T)]) 
+  if(nrow(safety2[[name]])!=0&nrow(safety2[[paste0(name, "_inv", sep="")]])!=0)
+  {
   name2<-paste0(name, "_inv", sep="")
   safety2_merged[[name]]<-full_join(x = safety2[[name]], y= safety2[[name2]], by=c("assembled", "Exact_new"))
   safety2_merged[[name]]<-safety2_merged[[name]]%>%select("assembled",  nreads="readnumber.x", nreads_inv="readnumber.y", "Exact_new")
