@@ -35,12 +35,12 @@ File_list_pipeline_amplicones<-function(filelist,read_length=250,threshold=100){
   resHLA
 }
 
-File_list_pipeline_amplicones_parallel<-function(filelist,read_length=250,threshold=100,cores=6){
+File_list_pipeline_amplicones_parallel<-function(filelist,read_length=250,threshold=100,cores=6, downsample=-1){
   resHLA<-lapply(filelist[,1],"[",1)
   names(resHLA)<-filelist[,1]
   res<-mclapply(1:nrow(filelist), mc.cores =cores, function(i){
     cat(names(resHLA)[i])
-    HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold)
+    HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold, downsample=downsample)
   })
   names(res)<-filelist[,1]
   res
