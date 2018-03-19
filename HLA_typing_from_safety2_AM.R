@@ -135,24 +135,24 @@ safety2<-DRB[[4]]
  
 #Get merged inv and non inv lists to search for possible new allele variants  
   safety2_merged<-list()
-  HLA_base_str<-DNAStringSet(HLA_allele_list$Sequence)
-  for (name in  names(safety2)[!grepl(pattern = "inv", x = names(safety2), fixed=T)]) 
-  if(nrow(safety2[[name]])!=0&nrow(safety2[[paste0(name, "_inv", sep="")]])!=0)
-  {
-  name2<-paste0(name, "_inv", sep="")
-  safety2_merged[[name]]<-full_join(x = safety2[[name]], y= safety2[[name2]], by=c("assembled", "Exact_new"))
-  safety2_merged[[name]]<-safety2_merged[[name]]%>%select("assembled",  nreads="readnumber.x", nreads_inv="readnumber.y", "Exact_new")
-  safety2_merged[[name]]$nreads[is.na(safety2_merged[[name]]$nreads)]<-0
-  safety2_merged[[name]]$nreads_inv[is.na(safety2_merged[[name]]$nreads_inv)]<-0
-  
-#Match suspicious(inv+non_inv+noExact match) seqs on the whole base
-   for (i in which(safety2_merged[[name]]$nreads_inv!=0&safety2_merged[[name]]$nreads!=0&safety2_merged[[name]]$Exact_new=="", )) {
-  VC1<-vcountPattern(pattern = safety2_merged[[name]]$assembled[i], subject = HLA_base_str,
-                     max.mismatch = 0, with.indels = F, fixed=F)
-  safety2_merged[[name]]$Exact_new[i]<-paste0(HLA_allele_list$Allele[VC1!=0], collapse=" ")
-
-   }
-  }
+#   HLA_base_str<-DNAStringSet(HLA_allele_list$Sequence)
+#   for (name in  names(safety2)[!grepl(pattern = "inv", x = names(safety2), fixed=T)]) 
+#   if(nrow(safety2[[name]])!=0&nrow(safety2[[paste0(name, "_inv", sep="")]])!=0)
+#   {
+#   name2<-paste0(name, "_inv", sep="")
+#   safety2_merged[[name]]<-full_join(x = safety2[[name]], y= safety2[[name2]], by=c("assembled", "Exact_new"))
+#   safety2_merged[[name]]<-safety2_merged[[name]]%>%select("assembled",  nreads="readnumber.x", nreads_inv="readnumber.y", "Exact_new")
+#   safety2_merged[[name]]$nreads[is.na(safety2_merged[[name]]$nreads)]<-0
+#   safety2_merged[[name]]$nreads_inv[is.na(safety2_merged[[name]]$nreads_inv)]<-0
+#   
+# #Match suspicious(inv+non_inv+noExact match) seqs on the whole base
+#    for (i in which(safety2_merged[[name]]$nreads_inv!=0&safety2_merged[[name]]$nreads!=0&safety2_merged[[name]]$Exact_new=="", )) {
+#   VC1<-vcountPattern(pattern = safety2_merged[[name]]$assembled[i], subject = HLA_base_str,
+#                      max.mismatch = 0, with.indels = F, fixed=F)
+#   safety2_merged[[name]]$Exact_new[i]<-paste0(HLA_allele_list$Allele[VC1!=0], collapse=" ")
+# 
+#    }
+#   }
 
   safety3<-list(HLA_allele_Iclass=HLAI[[1]], HLA_Iclass_amps=HLAI[[2]],
                 HLA_allele_DQB=DQB[[1]], HLA_DQB_amps=DQB[[2]],
