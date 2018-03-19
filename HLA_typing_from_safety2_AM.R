@@ -59,8 +59,8 @@ get_safety3 <- function(safety2) {
 
 #Get 3 different bases for the first class, DRB, DQB separetly  
   HLA_allele_Iclass<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(HLA_class=="A"|HLA_class=="B"|HLA_class=="C")%>%select(Allele, Sequence)
-  HLA_allele_DRB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="D.B*", fixed=F))%>%select(Allele, Sequence)
-  HLA_allele_DQB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="D.B*", fixed=F))%>%select(Allele, Sequence)
+  HLA_allele_DRB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="DRB*", fixed=F))%>%select(Allele, Sequence)
+  HLA_allele_DQB<-select(HLA_allele_list, Allele, Sequence, HLA_class)%>%filter(grepl(HLA_allele_list$HLA_class, pattern="DQB*", fixed=F))%>%select(Allele, Sequence)
   
 #Initiate safety 3 tables, should add 8 columns with appropriate names
   HLA_allele_Iclass$Iamp1<-0
