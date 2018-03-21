@@ -392,7 +392,16 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsam
                IIamp1_DQBalt_inv=readed[grepl("GTCCAGTCACC[AG]TTCCTA",substr(readed$read1,1,22)),],
                IIamp1_DRBalt_inv=readed[grepl("CAG[CT]CTTCTCTTCCTGGC",substr(readed$read1,1,22)),],
                IIamp2_DRBalt_inv=readed[grepl("TGCTCTGTGCAGATTCAG",substr(readed$read1,1,22)),],#&grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read1,1,22)),],
-               IIamp2_DQBalt_inv=readed[grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read1,1,22)),]#&grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read1,1,22)),]
+               IIamp2_DQBalt_inv=readed[grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read1,1,22)),],#&grepl("TG[CT]TCTGGGCAGATTCAG",substr(readed$read1,1,22)),]
+               
+               IIamp_DQA=readed[grepl("ACAAAGCTCTG[AC]TGCTGGG",substr(readed$read1,1,24)),],
+               IIamp_DQA_inv=readed[grepl("AGAAACA[GC]CTTCTGTGACTG",substr(readed$read1,1,24)),],
+               
+               IIamp1_DPB=readed[grepl("GCGTTACTGATGGTGCTGC",substr(readed$read1,1,24)),],
+               IIamp1_DPB_inv=readed[grepl("ATC[CT]GTCACGTGGCAGAC",substr(readed$read1,1,23)),],
+               
+               IIamp2_DPB=readed[grepl("GGAACAGCCAGAAGGA",substr(readed$read1,1,20)),],
+               IIamp2_DPB_inv=readed[grepl("CCAC[GT]TGGCA[GA][GA]TGTA",substr(readed$read1,1,24)),]
   )
   ampreads<-sapply(readed,nrow)
   print(ampreads)
@@ -429,6 +438,13 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsam
   readed$IIamp2_DQBalt_inv<-get_overlap_merged_fix(readed$IIamp2_DQBalt_inv, shift = 205)
   readed$IIamp2_DRBalt<-get_overlap_merged_fix(readed$IIamp2_DRBalt, shift=166)
   readed$IIamp2_DRBalt_inv<-get_overlap_merged_fix(readed$IIamp2_DRBalt_inv, shift =166)
+  
+  readed$IIamp_DQA<-get_overlap_merged_fix(readed$IIamp_DQA, shift = 33 )
+  readed$IIamp_DQA_inv<-get_overlap_merged_fix(readed$IIamp_DQA_inv, shift = 33)
+  readed$IIamp1_DPB<-get_overlap_merged_fix(readed$IIamp1_DPB, shift = 104)
+  readed$IIamp1_DPB_inv<-get_overlap_merged_fix(readed$IIamp1_DPB_inv, shift = 104)
+  readed$IIamp2_DPB<-get_overlap_merged_fix(readed$IIamp2_DPB, shift = 155)
+  readed$IIamp2_DPB_inv<-get_overlap_merged_fix(readed$IIamp2_DPB_inv, shift = 155)
   
   readed$Iamp1alt<-get_nonoverlap_merged(readed$Iamp1alt)
   readed$Iamp1alt_inv<-get_nonoverlap_merged(readed$Iamp1alt_inv)
