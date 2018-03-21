@@ -22,6 +22,7 @@ get_HLA_base <- function(filename) {
   HLA_base<-select(base,2:6)
   HLA_base
 }
+download.file(url = "https://github.com/ANHIG/IMGTHLA/blob/Latest/hla_nuc.fasta", destfile = "hla_nuc.fasta.txt")
 HLA_base<-get_HLA_base("hla_nuc.fasta.txt")
 
 
