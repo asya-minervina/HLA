@@ -455,7 +455,7 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsam
   print("Exact matches read1 found")
   print(format(Sys.time(), "%a %b %d %X %Y"))
   readed<-lapply(readed,fathers_and_children)
-  readed[12:22]<-lapply(readed[12:22],straight_inverse)
+  readed[c(12:22, 24,26,28)]<-lapply(readed[c(12:22, 24,26,28)],straight_inverse)
   # readed<-amplist
   readed_intersect<-lapply(readed,function(x){x[(x$parents==1|(x$parents==2&x$freq>0.05)),]})
   print("Graph made. Ready for papas intersection")
