@@ -79,6 +79,9 @@ gzreader<-function(read1,read2){
   #gzread2 <- gzfile(read2, open = "r")
   Fastq1<-readLines(read1);
   Fastq2<-readLines(read2);
+  Fastq1<-Fastq1[1:min(length(Fastq1),length(Fastq2))]#for adaptor-trimming problems
+  Fastq2<-Fastq2[1:min(length(Fastq1),length(Fastq2))]#for adaptor-trimming problems
+  #get 
   res<-data.frame(read1=Fastq1[(1:length(Fastq1))%%4==2],read2=Fastq2[(1:length(Fastq2))%%4==2],stringsAsFactors = F)
   rm(Fastq1)
   rm(Fastq2)
