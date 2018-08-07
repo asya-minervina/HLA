@@ -341,6 +341,7 @@ for (i in 1:nrow(safety3$HLA_allele_DQA)) {
     amps_listDPB[[i]]<-str_split(amps_listDPB[[i]], pattern = "," )
   }
   amps_listDQA<-str_split(DQA$amps, pattern = "_")
+  if(length(amps_listDQA)!=0)#zatychka
   for (i in 1:length(amps_listDQA)) {
     amps_listDQA[[i]]<-str_split(amps_listDQA[[i]], pattern = "," )
   }
@@ -397,6 +398,7 @@ for (i in 1:nrow(safety3$HLA_allele_DQA)) {
     for (j in 1:length(amps_listDPB)) {
       resDPB[i,j]<-isdaddy4(amps_listDPB[[i]], amps_listDPB[[j]])
     } 
+  if(length(amps_listDQA)!=0)
   for (i in 1:length(amps_listDQA))
     for (j in 1:length(amps_listDQA)) {
       resDQA[i,j]<-isdaddy2(amps_listDQA[[i]], amps_listDQA[[j]])

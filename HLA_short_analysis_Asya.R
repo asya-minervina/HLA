@@ -26,22 +26,22 @@ download.file(url = "https://raw.githubusercontent.com/ANHIG/IMGTHLA/Latest/hla_
 HLA_base<-get_HLA_base("hla_nuc.fasta.txt")
 
 
-File_list_pipeline_amplicones<-function(filelist,read_length=250,threshold=100){
+File_list_pipeline_amplicones<-function(filelist,read_length=250,threshold=100,merged_fun = get_overlap_merged){
   resHLA<-lapply(filelist[,1],"[",1)
   names(resHLA)<-filelist[,1]
   for (i in 1:nrow(filelist)){
     print(names(resHLA)[i])
-    resHLA[[i]]<-HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold)
+    resHLA[[i]]<-HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold,merged_fun = merged_fun)
   }
   resHLA
 }
 
-File_list_pipeline_amplicones_parallel<-function(filelist,read_length=250,threshold=100,cores=6, downsample=-1){
+File_list_pipeline_amplicones_parallel<-function(filelist,read_length=250,threshold=100,cores=6, downsample=-1,merged_fun = get_overlap_merged){
   resHLA<-lapply(filelist[,1],"[",1)
   names(resHLA)<-filelist[,1]
   res<-mclapply(1:nrow(filelist), mc.cores =cores, function(i){
     cat(names(resHLA)[i])
-    HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold, downsample=downsample)
+    HLA_amplicones_full(filelist[i,2],filelist[i,3],read_length = read_length,threshold=threshold, downsample=downsample,merged_fun = merged_fun)
   })
   names(res)<-filelist[,1]
   res
@@ -180,7 +180,7 @@ LCS_comp2<-function(a,b){#one side overlap a b
 
 
 #Merge overlap reads 1 and 2
-get_overlap_merged<-function(merged){
+get_overlap_merged<-function(merged,shift=0){
   temp<-list();
   if(nrow(merged)==0)return(merged)
   
@@ -204,7 +204,7 @@ get_overlap_merged_fix<-function(merged,shift=1, rlength=231){
 }
 
 #Merge nonoverlap read 1 and 2 
-get_nonoverlap_merged<-function(merged,insert=1){
+get_nonoverlap_merged<-function(merged,insert=1,shift=0){
   if(nrow(merged)==0)return(merged)
   merged$Overlap_max_aligned<-insert
   merged$Overlap_start<-nchar(merged$read1[1])+insert
@@ -365,7 +365,7 @@ bayesian_alleles_report<-function(allelelist){
   list(A=a,B=b,C=c,DRB=DRB,DQB=DQB)
 }
 
-HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsample=-1){
+HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsample=-1,merged_fun=get_overlap_merged){
   print("File read start")
   print(format(Sys.time(), "%a %b %d %X %Y"))
   readed<-gzreader(read1,read2)
@@ -421,33 +421,35 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsam
   print(nchamp)
   #readed<-lapply(readed,get_overlap_merged)
   
-  readed$Iamp1<-get_overlap_merged_fix(readed$Iamp1, shift=29)
-  readed$Iamp1_inv<-get_overlap_merged_fix(readed$Iamp1_inv, shift=29)
-  readed$Iamp2<-get_overlap_merged_fix(readed$Iamp2, shift=9)
-  readed$Iamp2_inv<-get_overlap_merged_fix(readed$Iamp2_inv, shift=9)
-  readed$IIamp1_DQB<-get_overlap_merged_fix(readed$IIamp1_DQB, shift=71)
-  readed$IIamp1_DQB_inv<-get_overlap_merged_fix(readed$IIamp1_DQB_inv, shift = 71)
-  readed$IIamp1_Others<-get_overlap_merged_fix(readed$IIamp1_Others, shift = 130)
-  readed$IIamp1_Others_inv<-get_overlap_merged_fix(readed$IIamp1_Others_inv, shift=130)
-  readed$IIamp2<-get_overlap_merged_fix(readed$IIamp2, shift = 155)
-  readed$IIamp2_inv<-get_overlap_merged_fix(readed$IIamp2_inv, shift = 155)
-  readed$Iamp2alt<-get_overlap_merged_fix(readed$Iamp2alt, shift=40)
-  readed$Iamp2alt_inv<-get_overlap_merged_fix(readed$Iamp2alt_inv, shift = 40)
-  readed$IIamp1_DQBalt<-get_overlap_merged_fix(readed$IIamp1_DQBalt, shift = 32)
-  readed$IIamp1_DQBalt_inv<-get_overlap_merged_fix(readed$IIamp1_DQBalt_inv, shift = 32)
-  readed$IIamp1_DRBalt<-get_overlap_merged_fix(readed$IIamp1_DRBalt, shift=35)
-  readed$IIamp1_DRBalt_inv<-get_overlap_merged_fix(readed$IIamp1_DRBalt_inv, shift = 35)
-  readed$IIamp2_DQBalt<-get_overlap_merged_fix(readed$IIamp2_DQBalt, shift = 205)
-  readed$IIamp2_DQBalt_inv<-get_overlap_merged_fix(readed$IIamp2_DQBalt_inv, shift = 205)
-  readed$IIamp2_DRBalt<-get_overlap_merged_fix(readed$IIamp2_DRBalt, shift=166)
-  readed$IIamp2_DRBalt_inv<-get_overlap_merged_fix(readed$IIamp2_DRBalt_inv, shift =166)
+  readed$Iamp1<-merged_fun(readed$Iamp1, shift=29)
+  readed$Iamp1_inv<-merged_fun(readed$Iamp1_inv, shift=29)
+  readed$Iamp2<-merged_fun(readed$Iamp2, shift=9)
+  readed$Iamp2_inv<-merged_fun(readed$Iamp2_inv, shift=9)
+  readed$IIamp1_DQB<-merged_fun(readed$IIamp1_DQB, shift=71)
+  readed$IIamp1_DQB_inv<-merged_fun(readed$IIamp1_DQB_inv, shift = 71)
+  readed$IIamp1_Others<-merged_fun(readed$IIamp1_Others, shift = 130)
+  readed$IIamp1_Others_inv<-merged_fun(readed$IIamp1_Others_inv, shift=130)
+  readed$IIamp2<-merged_fun(readed$IIamp2, shift = 155)
+  readed$IIamp2_inv<-merged_fun(readed$IIamp2_inv, shift = 155)
+  readed$Iamp2alt<-merged_fun(readed$Iamp2alt, shift=40)
+  readed$Iamp2alt_inv<-merged_fun(readed$Iamp2alt_inv, shift = 40)
+  readed$IIamp1_DQBalt<-merged_fun(readed$IIamp1_DQBalt, shift = 32)
+  readed$IIamp1_DQBalt_inv<-merged_fun(readed$IIamp1_DQBalt_inv, shift = 32)
+  readed$IIamp1_DRBalt<-merged_fun(readed$IIamp1_DRBalt, shift=35)
+  readed$IIamp1_DRBalt_inv<-merged_fun(readed$IIamp1_DRBalt_inv, shift = 35)
+  readed$IIamp2_DQBalt<-merged_fun(readed$IIamp2_DQBalt, shift = 205)
+  readed$IIamp2_DQBalt_inv<-merged_fun(readed$IIamp2_DQBalt_inv, shift = 205)
+  readed$IIamp2_DRBalt<-merged_fun(readed$IIamp2_DRBalt, shift=166)
+  readed$IIamp2_DRBalt_inv<-merged_fun(readed$IIamp2_DRBalt_inv, shift =166)
   
-  readed$IIamp_DQA<-get_overlap_merged_fix(readed$IIamp_DQA, shift = 33 )
-  readed$IIamp_DQA_inv<-get_overlap_merged_fix(readed$IIamp_DQA_inv, shift = 33)
-  readed$IIamp1_DPB<-get_overlap_merged_fix(readed$IIamp1_DPB, shift = 104)
-  readed$IIamp1_DPB_inv<-get_overlap_merged_fix(readed$IIamp1_DPB_inv, shift = 104)
-  readed$IIamp2_DPB<-get_overlap_merged_fix(readed$IIamp2_DPB, shift = 155)
-  readed$IIamp2_DPB_inv<-get_overlap_merged_fix(readed$IIamp2_DPB_inv, shift = 155)
+  readed$IIamp_DQA<-get_overlap_merged(readed$IIamp_DQA, shift = 33 )
+  readed$IIamp_DQA_inv<-get_overlap_merged(readed$IIamp_DQA_inv, shift = 33)
+
+  readed$IIamp1_DPB<-get_overlap_merged(readed$IIamp1_DPB, shift = 104)
+  readed$IIamp1_DPB_inv<-get_overlap_merged(readed$IIamp1_DPB_inv, shift = 104)
+  readed$IIamp2_DPB<-get_overlap_merged(readed$IIamp2_DPB, shift = 155)
+  readed$IIamp2_DPB_inv<-get_overlap_merged(readed$IIamp2_DPB_inv, shift = 155)
+  
   
   readed$Iamp1alt<-get_nonoverlap_merged(readed$Iamp1alt)
   readed$Iamp1alt_inv<-get_nonoverlap_merged(readed$Iamp1alt_inv)
