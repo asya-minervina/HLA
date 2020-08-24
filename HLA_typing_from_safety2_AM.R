@@ -8,13 +8,13 @@ library(stringr)
 library(igraph)
 library(tibble)
 library(parallel)
-
+library(tidyr)
 
 #Function to get one table for all people with tidy alleles and scores. Takes list of results (output of get_HLA_result)
 #as an input
 get_mega_table <- function(Typing_results) {
   Mega_table_first<-do.call(rbind, lapply(Typing_results, function(x){x$safety5}))
-  Mega_table_first<-rownames_to_column(df = Mega_table_first)
+  Mega_table_first<-rownames_to_column(Mega_table_first)
   Mega_table_first$donor<-sapply(str_split(Mega_table_first$rowname, fixed(".")), function(x) {x[[1]]})
   Mega_table_first<-select(Mega_table_first, donor, Allele, Score, no_amps, sumreads)
   Mega_table_first$tidyAllele<-sapply(Mega_table_first$Allele, gettidyHLA)
@@ -32,8 +32,8 @@ get_HLA_result<-function (donor) {  say("START!")
   
   if (sum(sapply(donor$safety2, nrow)[c(1,2,6,7,12,13,17,18)])>0)
     #if (donor$safety2!="fail")
-    {
-    safety3<-get_safety3(lapply(donor$safety2, function(x){x[((x$parents==1&x$freq>0.001)|(x$parents==2&x$freq>0.05))&!grepl(pattern = "NULL",x$assembled), ]}))
+    {#paretn was freq>0.001
+    safety3<-get_safety3(lapply(donor$safety2, function(x){x[((x$parents==1&x$freq>0.01)|(x$parents==2&x$freq>0.01)|(x$parents==3&x$freq>0.01)|(x$parents==4&x$freq>0.01))&!grepl(pattern = "NULL",x$assembled), ]}))
     safety4<-get_safety4(safety3)
     safety5<-get_safety5(DT1=safety4$DT1, DQB=safety4$DQB, DRB=safety4$DRB, DPB=safety4$DPB, DQA=safety4$DQA)
     list(safety3=safety3, safety4=safety4, safety5=safety5)
@@ -420,11 +420,13 @@ for (i in 1:nrow(safety3$HLA_allele_DQA)) {
   list(DT1=DT1, gr1=gr1, DQB=DQB, grDQB=grDQB, DRB=DRB, grDRB=grDRB, DPB=DPB, grDPB=grDPB, DQA=DQA, grDQA=grDQA)
 }
 
-get_safety5<-function(DT1, DQB, DRB, DPB, DQA) {HLA_typing_resultsIclass<-filter(DT1, DT1$degree==0)%>%select(Allele, Score, no_amps, sumreads)
-HLA_typing_resultsDQB<-filter(DQB, DQB$degree==0)%>%select(Allele, Score, no_amps, sumreads)
-HLA_typing_resultsDRB<-filter(DRB, DRB$degree==0)%>%select(Allele, Score, no_amps, sumreads)
-HLA_typing_resultsDPB<-filter(DPB, DPB$degree==0)%>%select(Allele, Score, no_amps, sumreads)
-HLA_typing_resultsDQA<-filter(DQA, DQA$degree==0)%>%select(Allele, Score, no_amps, sumreads)
+get_safety5<-function(DT1, DQB, DRB, DPB, DQA) {HLA_typing_resultsIclass<-filter(DT1, (DT1$degree==0)|(DT1$no_amps==""))%>%select(Allele, Score, no_amps, sumreads)
+
+HLA_typing_resultsDQB<-filter(DQB, (DQB$degree==0)|(DQB$no_amps==""))%>%select(Allele, Score, no_amps, sumreads)
+HLA_typing_resultsDRB<-filter(DRB, (DRB$degree==0)|(DRB$no_amps==""))%>%select(Allele, Score, no_amps, sumreads)
+HLA_typing_resultsDPB<-filter(DPB, (DPB$degree==0)|(DPB$no_amps==""))%>%select(Allele, Score, no_amps, sumreads)
+HLA_typing_resultsDQA<-filter(DQA, (DQA$degree==0)|(DQA$no_amps==""))%>%select(Allele, Score, no_amps, sumreads)
+
 HLA_all<-list(HLA_typing_resultsIclass, HLA_typing_resultsDQB, HLA_typing_resultsDRB, HLA_typing_resultsDPB, HLA_typing_resultsDQA)
 HLA_typing_results<-do.call(rbind, HLA_all)
 
@@ -453,3 +455,73 @@ gettidyHLA<-function (longstr) {
 }
 
 
+hla_wide <- function(x) {
+  d3c<-read.csv2(x,stringsAsFactors = F)
+  
+  d3c$Locus<-strsplit(x = d3c$tidyAllele, split = "*", fixed=T)%>%sapply("[[", 1)
+  d3c$FirstAllele<-strsplit(x = d3c$tidyAllele, split = " ", fixed=T)%>%sapply("[[", 1)
+  d3c$SimpleAllele<-str_sub(string = d3c$FirstAllele, start = 1, end = -4)
+  d3c_long<-d3c%>%
+    select(donor, Locus, FirstAllele, SimpleAllele, tidyAllele)
+  
+  d3c_wide<-d3c%>%
+    select(donor, Locus, FirstAllele)
+  d3c_wide$FirstAllele<-gsub(pattern = "DPB1*107:01", replacement = "DPB1*13:01:01",
+                             x = d3c_wide$FirstAllele, fixed = T)
+  d3c_wide$FirstAllele<-gsub(pattern = "B*07:100 ", replacement = "B*15:01:01",
+                             x = d3c_wide$FirstAllele, fixed = T)
+  d3c_wide$FirstAllele<-gsub(pattern = "DPB1*138:01", replacement = "DQB1*23:01:01",
+                             x = d3c_wide$FirstAllele, fixed = T)
+  
+  d3c_wide<-d3c_wide%>%
+    group_by(donor)%>%
+    mutate(n=as.integer(duplicated(Locus))+1)
+  
+  d3c_wide$Locus<-paste0(d3c_wide$Locus, "_", d3c_wide$n)
+  d3c_wide<-d3c_wide%>%
+    select(1:3)
+  d3c_wide<-spread(d3c_wide, Locus, FirstAllele)
+  
+  d3c_wide$genotype<-apply(d3c_wide[,c(-1)], MARGIN=1, paste0, collapse="_")
+  d3c_wide$genotype2<-apply(d3c_wide[,c(2:7,12:15)], MARGIN=1, paste0, collapse="_")
+  DRB<-grepl(pattern="DRB1[*]03:01",
+             x=d3c_wide$genotype)
+  DQB<-grepl(pattern="DQB1[*]02:01",
+             x=d3c_wide$genotype)
+  DQA<-grepl(pattern="DQA1[*]05:01",
+             x=d3c_wide$genotype)
+  d3c_wide$DR3<-DRB==T&DQB==T&DQA==T
+  
+  DRB1<-grepl(pattern="DRB1[*]04:[01|02|04|05|08]",
+              x=d3c_wide$genotype)
+  DQB2<-grepl(pattern="DQB1[*]03:[01|05]",
+              x=d3c_wide$genotype)
+  DQB1<-grepl(pattern="DQB1[*]02",
+              x=d3c_wide$genotype)
+  DQA3<-grepl(pattern="DQA1[*]03:01",
+              x=d3c_wide$genotype)
+  
+  DQB3<-(DQB2==T|DQB1==T)
+  
+  d3c_wide$DR4<-as.logical(DRB1*DQB3*DQA3)
+  
+  d3c_wide$same_genotype<-0
+  d3c_wide$same_genotype2<-0
+  
+  for (i in (1:nrow(d3c_wide))) {
+    d3c_wide$same_genotype[i]<-paste(d3c_wide$donor[grepl(pattern = d3c_wide$genotype[i], 
+                                                          x = d3c_wide$genotype, fixed = T)], collapse="_")
+    d3c_wide$same_genotype2[i]<-paste(d3c_wide$donor[grepl(pattern = d3c_wide$genotype2[i], 
+                                                           x = d3c_wide$genotype2, fixed = T)], collapse="_")
+    
+  }
+  
+  list(wide=d3c_wide, long=d3c_long)
+}
+
+
+#Megatable filtered by hand as an input (no more than 2 alleles of each type: A, B,C..etc.)
+#diab<-hla_wide("diab_all.csv")
+
+#write.csv2(diab$wide, file="hla_diab_all_wide_final.csv")
+#write.csv2(diab$long, file="hla_diab_all_long.csv")

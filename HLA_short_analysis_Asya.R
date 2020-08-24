@@ -22,7 +22,7 @@ get_HLA_base <- function(filename) {
   HLA_base<-select(base,2:6)
   HLA_base
 }
-download.file(url = "https://raw.githubusercontent.com/ANHIG/IMGTHLA/Latest/hla_nuc.fasta", destfile = "hla_nuc.fasta.txt")
+#download.file(url = "https://raw.githubusercontent.com/ANHIG/IMGTHLA/Latest/hla_nuc.fasta", destfile = "hla_nuc.fasta.txt")
 HLA_base<-get_HLA_base("hla_nuc.fasta.txt")
 
 
@@ -90,6 +90,8 @@ gzreader<-function(read1,read2){
   res
 }
 
+
+
 get_groups_complicated<-function(readed,threshold=100,read_length=250,cons_length=150,primer_length=20){
   readed$read1<-substr(readed$read1,primer_length,read_length)#trim them
   readed$read2<-substr(readed$read2,primer_length,read_length)#trim them
@@ -131,7 +133,7 @@ get_groups<-function(readed,threshold=100,read_length=250,primer_length=20){
 
 alphabet<-c(A=1,G=2,C=3,T=4,N=5)
 #Function for consensus
-docons<-function(vec,thres=0.7){
+docons<-function(vec,thres=0.7){#was 0.7
   str_mat<-do.call(rbind,(strsplit(vec,"")))
   paste0(sapply(apply(str_mat,MARGIN = 2,table, simplify=F),
                 function(x)
@@ -140,7 +142,7 @@ docons<-function(vec,thres=0.7){
                   else{"N"}}),collapse = "")
 }
 
-docons_corr<-function(vec,thres=0.7){
+docons_corr<-function(vec,thres=0.7){#was 0.7
   str_mat<-do.call(rbind,(strsplit(vec,"")))
   paste0(sapply(lapply(1:ncol(str_mat), function(y) {table(str_mat[, y])}),
                 function(x)
@@ -442,13 +444,13 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsam
   readed$IIamp2_DRBalt<-merged_fun(readed$IIamp2_DRBalt, shift=166)
   readed$IIamp2_DRBalt_inv<-merged_fun(readed$IIamp2_DRBalt_inv, shift =166)
   
-  readed$IIamp_DQA<-get_overlap_merged(readed$IIamp_DQA, shift = 33 )
-  readed$IIamp_DQA_inv<-get_overlap_merged(readed$IIamp_DQA_inv, shift = 33)
+  readed$IIamp_DQA<-rbind(get_overlap_merged(readed$IIamp_DQA, shift = 33),get_overlap_merged_fix(readed$IIamp_DQA, shift = 33),get_overlap_merged_fix(readed$IIamp_DQA, shift = 36))#was only 33
+  readed$IIamp_DQA_inv<-rbind(get_overlap_merged(readed$IIamp_DQA_inv, shift = 33),get_overlap_merged_fix(readed$IIamp_DQA_inv, shift = 33),get_overlap_merged_fix(readed$IIamp_DQA_inv, shift = 36))#10
 
-  readed$IIamp1_DPB<-get_overlap_merged(readed$IIamp1_DPB, shift = 104)
-  readed$IIamp1_DPB_inv<-get_overlap_merged(readed$IIamp1_DPB_inv, shift = 104)
-  readed$IIamp2_DPB<-get_overlap_merged(readed$IIamp2_DPB, shift = 155)
-  readed$IIamp2_DPB_inv<-get_overlap_merged(readed$IIamp2_DPB_inv, shift = 155)
+  readed$IIamp1_DPB<-rbind(get_overlap_merged(readed$IIamp1_DPB, shift = 104),get_overlap_merged_fix(readed$IIamp1_DPB, shift = 104))
+  readed$IIamp1_DPB_inv<-rbind(get_overlap_merged(readed$IIamp1_DPB_inv, shift = 104),get_overlap_merged_fix(readed$IIamp1_DPB_inv, shift = 104))
+  readed$IIamp2_DPB<-rbind(get_overlap_merged(readed$IIamp2_DPB, shift = 155),get_overlap_merged_fix(readed$IIamp2_DPB, shift = 155))
+  readed$IIamp2_DPB_inv<-rbind(get_overlap_merged(readed$IIamp2_DPB_inv, shift = 155),get_overlap_merged_fix(readed$IIamp2_DPB_inv, shift = 155))
   
   
   readed$Iamp1alt<-get_nonoverlap_merged(readed$Iamp1alt)
@@ -462,7 +464,7 @@ HLA_amplicones_full<-function(read1,read2,threshold=100,read_length=250, downsam
   readed<-lapply(readed,fathers_and_children)
   readed[c(12:22, 24,26,28)]<-lapply(readed[c(12:22, 24,26,28)],straight_inverse)
   # readed<-amplist
-  readed_intersect<-lapply(readed,function(x){x[(x$parents==1|(x$parents==2&x$freq>0.05)),]})
+  readed_intersect<-lapply(readed,function(x){x[x$readnumber>9&(x$parents==1|(x$parents==2&x$freq>0.05)|(x$parents==3&x$freq>0.05)|(x$parents==4&x$freq>0.05)),]})
   print("Graph made. Ready for papas intersection")
   print(format(Sys.time(), "%a %b %d %X %Y"))
   npapas<-sapply(readed_intersect,nrow)
